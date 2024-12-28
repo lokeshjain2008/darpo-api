@@ -1,21 +1,21 @@
 version: '3.8'
 
 services:
-  api:
-    build:
-      context: .
-      target: development
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/darpo?schema=public
-    volumes:
-      - .:/app
-      - /app/node_modules
-    depends_on:
-      - db
-    command: npm run start:dev
+  # api:
+  #   build:
+  #     context: .
+  #     target: development
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - DATABASE_URL=postgresql://postgres:postgres@db:5432/darpo?schema=public
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     - db
+  #   command: npm run start:dev
 
   db:
     image: postgres:15-alpine

@@ -15,10 +15,7 @@ export class AuthService {
   async handleGoogleAuth(googleData: GoogleAuthDto) {
     const user = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { googleId: googleData.googleId },
-          { email: googleData.email },
-        ],
+        OR: [{ googleId: googleData.googleId }, { email: googleData.email }],
       },
     });
 
@@ -31,7 +28,7 @@ export class AuthService {
           name: googleData.name,
         },
       });
-      
+
       return {
         needPhoneVerification: true,
         userId: newUser.id,
@@ -50,10 +47,10 @@ export class AuthService {
 
   async sendOtp(data: SendOtpDto) {
     const { phoneNumber, userId } = data;
-    
+
     // Generate and send OTP
     const otp = await this.otpService.generateAndSendOtp(phoneNumber);
-    
+
     // Update user's phone number if provided
     if (userId) {
       await this.prisma.user.update({
@@ -67,7 +64,7 @@ export class AuthService {
 
   async verifyOtp(data: VerifyOtpDto) {
     const { phoneNumber, otp, userId } = data;
-    
+
     const isValid = await this.otpService.verifyOtp(phoneNumber, otp);
     if (!isValid) {
       throw new UnauthorizedException('Invalid OTP');
@@ -91,6 +88,9 @@ export class AuthService {
           data: {
             phoneNumber,
             isPhoneVerified: true,
+            googleId: 'Todo: Generate',
+            email: 'Todo: Generate',
+            name: 'Todo: Generate',
           },
         });
       }

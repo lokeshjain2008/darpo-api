@@ -43,11 +43,14 @@ model Room {
 
 model User {
   id             String           @id @default(cuid())
-  email          String          @unique
-  password       String
+  googleId       String           @unique
+  phoneNumber    String?           @unique
+  isPhoneVerified Boolean          @default(false)
+  email          String           
+  password       String?
   name           String
-  organizationId String
-  organization   Organization    @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  organization   Organization?    @relation(fields: [organizationId], references: [id])
   propertyRoles  UserPropertyRole[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
