@@ -7,23 +7,83 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Tenant {
-  id        String   @id @default(uuid())
-  name      String
-  domain    String   @unique
-  users     User[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Organization {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  properties  Property[]
+  users       User[]     // Users belonging to this organization
+}
+
+model Property {
+  id             String           @id @default(cuid())
+  name           String
+  description    String?
+  address        String
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id])
+  rooms          Room[]
+  userRoles      UserPropertyRole[] // For ABAC
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // e.g., bedroom, kitchen, etc.
+  floor       Int?
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String           @id @default(cuid())
+  email          String          @unique
+  password       String
+  name           String
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  propertyRoles  UserPropertyRole[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
 
-  @@index([tenantId])
+model Role {
+  id            String           @id @default(cuid())
+  name          String          @unique // e.g., ADMIN, MANAGER, VIEWER
+  description   String?
+  permissions   Permission[]
+  userRoles     UserPropertyRole[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Permission {
+  id          String    @id @default(cuid())
+  action      String    // e.g., CREATE, READ, UPDATE, DELETE
+  resource    String    // e.g., PROPERTY, ROOM
+  attributes  Json?     // Additional ABAC attributes
+  roles       Role[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Junction table for User-Property-Role relationship (ABAC)
+model UserPropertyRole {
+  id          String   @id @default(cuid())
+  userId      String
+  propertyId  String
+  roleId      String
+  user        User     @relation(fields: [userId], references: [id])
+  property    Property @relation(fields: [propertyId], references: [id])
+  role        Role     @relation(fields: [roleId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, propertyId, roleId])
 }
