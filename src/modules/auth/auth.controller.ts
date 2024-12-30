@@ -2,6 +2,8 @@ import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { GoogleAuthDto, SendOtpDto, VerifyOtpDto } from './dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { SetPropertyDto } from './dto/set-property.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -28,5 +30,15 @@ export class AuthController {
   @Post('otp/verify')
   async verifyOtp(@Body() data: VerifyOtpDto) {
     return this.authService.verifyOtp(data);
+  }
+
+  @Post('set-property')
+  @UseGuards(JwtAuthGuard)
+  async setProperty(@Req() req, @Body() setPropertyDto: SetPropertyDto) {
+    const { user, token } = await this.authService.updateSelectedProperty(
+      req.user.userId,
+      setPropertyDto.propertyId,
+    );
+    return { message: 'Property selected successfully', token };
   }
 }
