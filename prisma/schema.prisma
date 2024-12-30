@@ -15,7 +15,6 @@ model Organization {
   updatedAt   DateTime   @updatedAt
   properties  Property[]
   users       User[]     // Users belonging to this organization
-  roles       Role[]     // Custom roles for this organization
 }
 
 model Property {
@@ -27,11 +26,8 @@ model Property {
   organization   Organization     @relation(fields: [organizationId], references: [id])
   rooms          Room[]
   userRoles      UserPropertyRole[] // For ABAC
-  visits         Visit[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
-
-  @@index([organizationId])
 }
 
 model Room {
@@ -41,120 +37,43 @@ model Room {
   floor       Int?
   propertyId  String
   property    Property @relation(fields: [propertyId], references: [id])
-  visits      Visit[]
-  occupied    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  @@index([propertyId])
 }
 
 model User {
   id             String           @id @default(cuid())
-  googleId       String           @unique
-  phoneNumber    String?           @unique
-  isPhoneVerified Boolean          @default(false)
-  email          String           
+  email          String?         @unique
+  googleId       String?         @unique
+  phoneNumber    String?         @unique
+  isPhoneVerified Boolean        @default(false)
   password       String?
   name           String
-  organizationId String?
-  organization   Organization?    @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id])
   propertyRoles  UserPropertyRole[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-
-  @@index([organizationId])
-  // @@index([email])
 }
 
 model Role {
-  id             String           @id @default(cuid())
-  name           String           @unique
-  description    String?
-  organizationId String?
-  organization   Organization?    @relation(fields: [organizationId], references: [id])
-  permissions    PermissionRole[] // Relation to PermissionRole
-  userRoles      UserPropertyRole[] // Relation to UserPropertyRole
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-
-  @@index([organizationId])
-  @@index([name])
+  id            String           @id @default(cuid())
+  name          String          @unique // e.g., ADMIN, MANAGER, VIEWER
+  description   String?
+  permissions   Permission[]
+  userRoles     UserPropertyRole[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
 model Permission {
-  id          String           @id @default(cuid())
-  action      String           // e.g., edit, view, upload_doc
-  entityType  String           // e.g., Property, Organization, Room
-  description String?
-  roles       PermissionRole[] // Relation to PermissionRole
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-}
+  id          String    @id @default(cuid())
+  action      String    // e.g., CREATE, READ, UPDATE, DELETE
+  entityType  String    // e.g., PROPERTY, ROOM
+  attributes  Json?     // Additional ABAC attributes
+  roles       Role[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-// Junction table for Role-Permission relationship
-model PermissionRole {
-  id            String     @id @default(cuid())
-  roleId        String
-  permissionId  String
-  role          Role       @relation(fields: [roleId], references: [id])
-  permission    Permission @relation(fields: [permissionId], references: [id])
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @default(now())
-
-  @@unique([roleId, permissionId])
-
-  @@index([roleId])
-}
-
-
-// Junction table for User-Property-Role relationship (ABAC)
-model UserPropertyRole {
-  id          String     @id @default(cuid())
-  userId      String
-  propertyId  String
-  roleId      String
-  user        User       @relation(fields: [userId], references: [id])
-  property    Property   @relation(fields: [propertyId], references: [id])
-  role        Role       @relation(fields: [roleId], references: [id])
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  @@unique([userId, propertyId, roleId])
-
-  @@index([userId])
-  @@index([roleId])
-}
-
-model Visitor {
-  id          String     @id @default(cuid())
-  name        String
-  email       String     @unique
-  phone       String
-  visits      Visit[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  @@index([email])
-  @@index([phone])
-}
-
-model Visit {
-  id          String     @id @default(cuid())
-  visitorId   String
-  propertyId  String
-  roomId      String
-  visitor     Visitor    @relation(fields: [visitorId], references: [id])
-  property    Property   @relation(fields: [propertyId], references: [id])
-  room        Room       @relation(fields: [roomId], references: [id])
-  startDate   DateTime
-  endDate     DateTime
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  @@index([visitorId])
-  @@index([propertyId])
-  @@index([roomId])
-  @@index([startDate])
-  @@index([endDate])
+  @@unique([action, entityType])
 }
