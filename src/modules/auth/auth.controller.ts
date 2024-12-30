@@ -4,10 +4,14 @@ import { AuthService } from './auth.service';
 import { GoogleAuthDto, SendOtpDto, VerifyOtpDto } from './dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { SetPropertyDto } from './dto/set-property.dto';
+import { OAuth2Client } from 'google-auth-library';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  private oauthClient: OAuth2Client;
+  constructor(private authService: AuthService) {
+    this.oauthClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  }
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
@@ -20,6 +24,24 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req) {
     return this.authService.handleGoogleAuth(req.user);
+  }
+
+  @Post('google/callback')
+  async googleAuthCallback(@Body('token') token: string) {
+    // This route is used by the mobile app to authenticate the user
+    // using the token received from Google OAuth flow initiated by the app/web (clientside).
+    if (!token) {
+      throw new Error('Token is required');
+    }
+    const ticket = await this.oauthClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+
+    return this.authService.handleGoogleAuth({ email, name, googleId });
   }
 
   @Post('otp/send')

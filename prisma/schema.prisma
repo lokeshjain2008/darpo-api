@@ -90,6 +90,8 @@ model Permission {
   roles       PermissionRole[] // Relation to PermissionRole
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+
+  @@unique([action, entityType])
 }
 
 // Junction table for Role-Permission relationship

@@ -42,12 +42,21 @@ export class PermissionsGuard implements CanActivate {
       include: { role: { include: { permissions: true } } },
     });
 
-    const userPermissions = userRoles.flatMap((userRole) =>
-      userRole.role.permissions.map((permission) => permission.action),
+    const userPermissionsIds = userRoles.flatMap((userRole) =>
+      userRole.role.permissions.map((permission) => permission.id),
+    );
+
+    const userPermissions = await this.prisma.permission.findMany({
+      where: { id: { in: userPermissionsIds } },
+      select: { action: true },
+    });
+
+    const userPermissionsActions = userPermissions.map(
+      (permission) => permission.action,
     );
 
     const hasPermission = requiredPermissions.every((permission) =>
-      userPermissions.includes(permission),
+      userPermissionsActions.includes(permission),
     );
 
     if (!hasPermission) {
