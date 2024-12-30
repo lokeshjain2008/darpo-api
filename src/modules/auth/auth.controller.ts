@@ -1,66 +1,45 @@
 import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { GoogleAuthDto, SendOtpDto, VerifyOtpDto } from './dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { SetPropertyDto } from './dto/set-property.dto';
-import { OAuth2Client } from 'google-auth-library';
+import { GoogleAuthDto, SendOtpDto, VerifyOtpDto } from './dto/auth.dto';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  private oauthClient: OAuth2Client;
-  constructor(private authService: AuthService) {
-    this.oauthClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-  }
+  constructor(private authService: AuthService) {}
 
+  @ApiOperation({ summary: 'Initiate Google OAuth flow' })
+  @ApiResponse({ status: 302, description: 'Redirects to Google login' })
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req) {
-    console.log(req);
-    // Initiates Google OAuth flow
-  }
+  async googleAuth() {}
 
+  @ApiOperation({ summary: 'Google OAuth callback' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns JWT token or indicates phone verification needed'
+  })
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req) {
     return this.authService.handleGoogleAuth(req.user);
   }
 
-  @Post('google/callback')
-  async googleAuthCallback(@Body('token') token: string) {
-    // This route is used by the mobile app to authenticate the user
-    // using the token received from Google OAuth flow initiated by the app/web (clientside).
-    if (!token) {
-      throw new Error('Token is required');
-    }
-    const ticket = await this.oauthClient.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    const { email, name, sub: googleId } = payload;
-
-    return this.authService.handleGoogleAuth({ email, name, googleId });
-  }
-
+  @ApiOperation({ summary: 'Send OTP to phone number' })
+  @ApiResponse({ status: 200, description: 'OTP sent successfully' })
   @Post('otp/send')
   async sendOtp(@Body() data: SendOtpDto) {
     return this.authService.sendOtp(data);
   }
 
+  @ApiOperation({ summary: 'Verify OTP' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns JWT token on successful verification'
+  })
   @Post('otp/verify')
   async verifyOtp(@Body() data: VerifyOtpDto) {
     return this.authService.verifyOtp(data);
-  }
-
-  @Post('set-property')
-  @UseGuards(JwtAuthGuard)
-  async setProperty(@Req() req, @Body() setPropertyDto: SetPropertyDto) {
-    const { user, token } = await this.authService.updateSelectedProperty(
-      req.user.userId,
-      setPropertyDto.propertyId,
-    );
-    return { message: 'Property selected successfully', token };
   }
 }
