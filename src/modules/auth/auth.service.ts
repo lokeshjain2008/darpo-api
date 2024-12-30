@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { OtpService } from './otp.service';
 import { GoogleAuthDto, VerifyOtpDto, SendOtpDto } from './dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -99,15 +100,45 @@ export class AuthService {
     return this.generateAuthResponse(user);
   }
 
-  private generateAuthResponse(user: any) {
-    const payload = { sub: user.id };
+  async updateSelectedProperty(userId: string, propertyId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    return this.generateAuthResponse(user, propertyId);
+  }
+
+  private async generateAuthResponse(user: User, selectedProperty?: string) {
+    /// Fetch properties the user has access to
+    const userProperties = await this.prisma.userPropertyRole.findMany({
+      where: { userId: user.id },
+      include: { property: true },
+    });
+
+    const properties = userProperties.map(
+      (userPropertyRole) => userPropertyRole.property,
+    );
+
+    if (properties.length === 1) {
+      // Automatically select the first property if only one is available
+      selectedProperty = properties.length === 1 ? properties[0].id : null;
+    }
+
+    // Generate JWT token
+    const payload = {
+      sub: user.id,
+      propertIDs: properties.map((property) => property.id),
+      selectedProperty,
+    };
+
     return {
-      accessToken: this.jwtService.sign(payload),
+      token: this.jwtService.sign(payload),
       user: {
         id: user.id,
-        email: user.email,
         phoneNumber: user.phoneNumber,
         name: user.name,
+        properties,
+        selectedProperty: selectedProperty || properties[0]?.id || null,
       },
     };
   }
