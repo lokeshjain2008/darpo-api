@@ -1,8 +1,9 @@
-import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Req, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiExcludeEndpoint } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { GoogleAuthDto, SendOtpDto, VerifyOtpDto } from './dto/auth.dto';
+import { GoogleAuthDto, SendOtpDto, VerifyOtpDto, SetPropertyDto } from './dto/auth.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -24,8 +25,20 @@ export class AuthController {
   })
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req) {
-    return this.authService.handleGoogleAuth(req.user);
+  async googleAuthCallback(@Req() req, @Res() res: Response) {
+    const result = await this.authService.handleGoogleAuth(req.user);
+    
+    if (result.needPhoneVerification) {
+      // Redirect to phone verification page with userId
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/verify-phone?userId=${result.userId}`
+      );
+    }
+
+    // Redirect to dashboard with token
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/dashboard?token=${result.accessToken}`
+    );
   }
 
   @ApiOperation({ summary: 'Send OTP to phone number' })
@@ -43,5 +56,15 @@ export class AuthController {
   @Post('otp/verify')
   async verifyOtp(@Body() data: VerifyOtpDto) {
     return this.authService.verifyOtp(data);
+  }
+
+  @ApiOperation({ summary: 'Set property for user' })
+  @ApiResponse({ status: 200, description: 'Property set successfully' })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBody({ type: SetPropertyDto })
+  @Post('set-property')
+  async setProperty(@Req() req, @Body() data: SetPropertyDto) {
+    return this.authService.setProperty(req.user.id, data.propertyId);
   }
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEmail, IsOptional, Length, IsMobilePhone } from 'class-validator';
+import { IsString, IsEmail, IsOptional, Length, IsMobilePhone, IsNotEmpty } from 'class-validator';
 
 export class GoogleAuthDto {
   @ApiProperty({
@@ -66,4 +66,14 @@ export class VerifyOtpDto {
   @IsOptional()
   @IsString()
   userId?: string;
+}
+
+export class SetPropertyDto {
+  @ApiProperty({
+    description: 'Property ID to set as current property',
+    example: 'cuid1234'
+  })
+  @IsString()
+  @IsNotEmpty()
+  propertyId: string;
 }
