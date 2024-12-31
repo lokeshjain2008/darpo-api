@@ -1,6 +1,6 @@
 import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { GoogleAuthDto, SendOtpDto, VerifyOtpDto } from './dto/auth.dto';
 
@@ -13,7 +13,9 @@ export class AuthController {
   @ApiResponse({ status: 302, description: 'Redirects to Google login' })
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth() {}
+  async googleAuth() {
+    // Initiates Google OAuth flow
+  }
 
   @ApiOperation({ summary: 'Google OAuth callback' })
   @ApiResponse({
