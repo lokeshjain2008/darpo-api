@@ -8,6 +8,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { OtpService } from './otp.service';
 import { CommonModule } from 'src/common/common.module';
+import { Reflector } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { CommonModule } from 'src/common/common.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleStrategy, JwtStrategy, OtpService],
-  exports: [AuthService],
+  providers: [AuthService, GoogleStrategy, JwtStrategy, OtpService, Reflector],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

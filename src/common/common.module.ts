@@ -6,7 +6,7 @@
  */
 
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../modules/prisma/prisma.module';
 import configuration from '../config/configuration';
 
