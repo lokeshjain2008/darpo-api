@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { JWTAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { Reflector } from '@nestjs/core';
 
 async function bootstrap() {
@@ -13,9 +13,9 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Use JwtAuthGuard globally
+  // Use JWTAuthGuard globally
   const reflector = app.get(Reflector);
-  app.useGlobalGuards(new JwtAuthGuard(reflector));
+  app.useGlobalGuards(new JWTAuthGuard(reflector));
 
   await app.listen(3000);
 }

@@ -2,9 +2,10 @@ import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { GoogleAuthDto, SendOtpDto, VerifyOtpDto } from './dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JWTAuthGuard } from './guards/jwt-auth.guard';
 import { SetPropertyDto } from './dto/set-property.dto';
 import { OAuth2Client } from 'google-auth-library';
+import { Public } from './decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -14,6 +15,7 @@ export class AuthController {
   }
 
   @Get('google')
+  @Public()
   @UseGuards(AuthGuard('google'))
   async googleAuth(@Req() req) {
     console.log(req);
@@ -21,12 +23,14 @@ export class AuthController {
   }
 
   @Get('google/callback')
+  @Public()
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req) {
     return this.authService.handleGoogleAuth(req.user);
   }
 
   @Post('google/callback')
+  @Public()
   async googleAuthCallback(@Body('token') token: string) {
     // This route is used by the mobile app to authenticate the user
     // using the token received from Google OAuth flow initiated by the app/web (clientside).
@@ -55,7 +59,6 @@ export class AuthController {
   }
 
   @Post('set-property')
-  @UseGuards(JwtAuthGuard)
   async setProperty(@Req() req, @Body() setPropertyDto: SetPropertyDto) {
     const { user, token } = await this.authService.updateSelectedProperty(
       req.user.userId,
