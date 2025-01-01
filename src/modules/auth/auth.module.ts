@@ -9,6 +9,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { OtpService } from './otp.service';
 import { CommonModule } from 'src/common/common.module';
 import { Reflector } from '@nestjs/core';
+import { PermissionService } from './permission.service';
 
 @Module({
   imports: [
@@ -26,7 +27,14 @@ import { Reflector } from '@nestjs/core';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleStrategy, JwtStrategy, OtpService, Reflector],
-  exports: [AuthService, JwtModule],
+  providers: [
+    AuthService,
+    GoogleStrategy,
+    JwtStrategy,
+    OtpService,
+    Reflector,
+    PermissionService,
+  ],
+  exports: [AuthService, JwtModule, PermissionService],
 })
 export class AuthModule {}
