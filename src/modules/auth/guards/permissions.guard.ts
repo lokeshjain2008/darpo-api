@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import { PermissionService } from '../permission.service';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -14,6 +15,7 @@ export class PermissionsGuard implements CanActivate {
     private reflector: Reflector,
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private permissionService: PermissionService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -36,27 +38,17 @@ export class PermissionsGuard implements CanActivate {
     if (!selectedProperty) {
       throw new ForbiddenException('No property selected');
     }
+    const organizationId = user.organizationId;
 
-    const userRoles = await this.prisma.userPropertyRole.findMany({
-      where: { userId: user.userId, propertyId: selectedProperty },
-      include: { role: { include: { permissions: true } } },
-    });
-
-    const userPermissionsIds = userRoles.flatMap((userRole) =>
-      userRole.role.permissions.map((permission) => permission.id),
-    );
-
-    const userPermissions = await this.prisma.permission.findMany({
-      where: { id: { in: userPermissionsIds } },
-      select: { action: true },
-    });
-
-    const userPermissionsActions = userPermissions.map(
-      (permission) => permission.action,
+    //TODO: get user permissions needs to be cached as this is a heavy operation
+    const userPermissions = await this.permissionService.getUserPermissions(
+      user.userId,
+      selectedProperty,
+      organizationId,
     );
 
     const hasPermission = requiredPermissions.every((permission) =>
-      userPermissionsActions.includes(permission),
+      userPermissions.includes(permission),
     );
 
     if (!hasPermission) {

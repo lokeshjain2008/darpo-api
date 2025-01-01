@@ -30,6 +30,26 @@ async function main() {
       entityType: 'Property',
       description: 'Permission to upload documents',
     },
+    {
+      action: 'organization_view',
+      entityType: 'Organization',
+      description: 'Permission to view organization',
+    },
+    {
+      action: 'organization_edit',
+      entityType: 'Organization',
+      description: 'Permission to edit organization',
+    },
+    {
+      action: 'application_create_organization',
+      entityType: 'Application',
+      description: 'Permission to create organization',
+    },
+    {
+      action: 'application_assign_org_roles',
+      entityType: 'Application',
+      description: 'Permission to assign organization roles',
+    },
   ];
 
   for (const permission of permissions) {
@@ -56,6 +76,10 @@ async function main() {
         'property_view',
         'property_edit',
         'property_upload_doc',
+        'organization_view',
+        'organization_edit',
+        'application_create_organization',
+        'application_assign_org_roles',
       ],
     },
     {
@@ -66,12 +90,13 @@ async function main() {
         'property_view',
         'property_edit',
         'property_upload_doc',
+        'organization_view',
       ],
     },
     {
       name: 'Viewer',
       description: 'Viewer with read-only access',
-      permissions: ['user_view', 'property_view'],
+      permissions: ['user_view', 'property_view', 'organization_view'],
     },
   ];
 
