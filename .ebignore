@@ -1,0 +1,11 @@
+node_modules
+.git
+.gitignore
+.env.local
+test
+*.test.ts
+README.md
+dist     # Include this if you want EB to run the build step
+.vscode
+coverage
+npm-debug.log
