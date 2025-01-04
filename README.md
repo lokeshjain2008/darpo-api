@@ -48,3 +48,4 @@ $ npm install -g mau
 $ mau deploy
 ```
 tesing... now permissions
+Soon I will write about the SG change to work with eb
