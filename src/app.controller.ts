@@ -10,4 +10,14 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  // In your NestJS app
+  @Public()
+  @Get('/health')
+  async check() {
+    return {
+      status: 'ok',
+      timestamp: new Date(),
+    };
+  }
 }
