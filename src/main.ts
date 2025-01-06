@@ -17,6 +17,6 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JWTAuthGuard(reflector));
 
-  await app.listen(3000);
+  await app.listen(8080);
 }
 bootstrap();

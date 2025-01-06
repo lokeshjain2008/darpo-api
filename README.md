@@ -47,3 +47,5 @@ If you are looking for a cloud-based platform to deploy your NestJS application,
 $ npm install -g mau
 $ mau deploy
 ```
+tesing... now permissions
+Soon I will write about the SG change to work with eb
